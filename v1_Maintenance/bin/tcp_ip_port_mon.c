@@ -47,15 +47,18 @@ int main(int argc, char *argv[])
 {
         fflush(stdout); fflush(stderr);
         //Start time
-        char start_time[64] = ""; //Human readable start time (actual time zone)
-        char start_time_unix[64] = ""; //Unix timestamp (UTC)
+        char log_time[64] = ""; //Human readable start time (actual time zone)
+        char log_time_unix[64] = ""; //Unix timestamp (UTC)
         struct timeval begin , now;
         gettimeofday(&begin , NULL);
-        time_str(NULL, 0, start_time, sizeof(start_time)); //Get Human readable string only
+        time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only
 
         signal(SIGUSR1, sig_handler_shutdown); //register handler as callback function used by CHECK-Macro
         CHECK(signal(SIGINT, sig_handler_parent), != SIG_ERR); //register handler for SIGINT for parent process
         CHECK(signal(SIGTERM, sig_handler_parent), != SIG_ERR); //register handler for SIGTERM for parent process
+
+        //pseudo constant empty string e.g. for initialization of json_data_node_t and checks. Not used #define here, because this would lead to several instances of an empty constant string with different addresses.
+        EMPTY_STR[0] = 0;
 
         //semaphores for output globally defined for easy access inside functions
         //sem_t *hdrsem; //Semaphore for named pipe containing TCP/IP data
@@ -88,43 +91,44 @@ int main(int argc, char *argv[])
         {
             lua_State *luaState = lua_open();
             if (luaL_dofile(luaState, argv[1]) != 0) {
-                fprintf(stderr, "%s [PID %d] Error parsing config file: %s\n\tRun without command line arguments for help.\n", start_time, getpid(), lua_tostring(luaState, -1));
+                fprintf(stderr, "%s [PID %d] Error parsing config file: %s\n\tRun without command line arguments for help.\n", log_time, getpid(), lua_tostring(luaState, -1));
                 exit(1);
             }
 
-            fprintf(stderr, "%s [PID %d] Parsing config file: %s\n", start_time, getpid(), argv[1]);
+            fprintf(stderr, "%s [PID %d] Parsing config file: %s\n", log_time, getpid(), argv[1]);
 
-            fprintf(stderr,"\tInterface: %s\n", get_config_opt(luaState, "interface"));
             strncpy(interface, get_config_opt(luaState, "interface"), sizeof(interface)); interface[sizeof(interface)-1] = 0;  //copy interface and ensure null termination of this string. Ugly.
+            fprintf(stderr,"\tInterface: %s\n", interface);
 
-            fprintf(stderr, "\tHostaddress: %s\n", get_config_opt(luaState, "hostaddress"));
             strncpy(hostaddr, get_config_opt(luaState, "hostaddress"), sizeof(hostaddr)); hostaddr[sizeof(hostaddr)-1] = 0;
+            fprintf(stderr, "\tHostaddress: %s\n", hostaddr);
 
             port = atoi(get_config_opt(luaState, "listening_port")); //convert string type to integer type (port)
-            fprintf(stderr, "\tlistening Port: %s\n", get_config_opt(luaState, "listening_port"));
+            fprintf(stderr, "\tlistening Port: %d\n", port);
 
             timeout = (double) atof(get_config_opt(luaState, "connection_timeout")); //set timeout and convert to integer type.
-            fprintf(stderr, "\ttimeout: %s\n", get_config_opt(luaState, "connection_timeout"));
+            fprintf(stderr, "\ttimeout: %lf\n", timeout);
 
             strncpy(user.name, get_config_opt(luaState, "user"), sizeof(user.name)); user.name[sizeof(user.name)-1] = 0;
-            fprintf(stderr, "\tuser: %s\n", get_config_opt(luaState, "user"));
+            fprintf(stderr, "\tuser: %s\n", user.name);
             
             strncpy(data_path, get_config_opt(luaState, "path_to_save_tcp_streams"), sizeof(data_path)); data_path[sizeof(data_path)-1] = 0;
-            fprintf(stderr, "\tpath_to_save_tcp_streams: %s\n", get_config_opt(luaState, "path_to_save_tcp_streams"));
+            fprintf(stderr, "\tpath_to_save_tcp_streams: %s\n", data_path);
 
             //check if mandatory string parameters are present, bufsize is NOT mandatory, the rest are numbers and are handled otherwise
             if(strlen(interface) == 0 || strlen(hostaddr) == 0 || strlen(user.name) == 0 || strlen(data_path) == 0)
             {
-                fprintf(stderr, "%s [PID %d] Error in config file: %s\n", start_time, getpid(), argv[1]);
+                fprintf(stderr, "%s [PID %d] Error in config file: %s\n", log_time, getpid(), argv[1]);
                 print_help_tcp(argv[0]);
                 return -1;
             }
 
-            if(get_config_opt(luaState, "max_file_size") != 0) //if optional parameter is given, set it.
+            if(get_config_opt(luaState, "max_file_size") != EMPTY_STR) //if optional parameter is given, set it.
             {
                 max_file_size = atoi(get_config_opt(luaState, "max_file_size"));
-                fprintf(stderr, "\tmax_file_size: %s\n", get_config_opt(luaState, "max_file_size"));
             }
+            fprintf(stderr, "\tmax_file_size: %d\n", max_file_size);
+
 
             lua_close(luaState);
         } 
@@ -146,12 +150,12 @@ int main(int argc, char *argv[])
 
         if(port < 1 || port > 65535) //Range checks
         {
-                fprintf(stderr, "%s [PID %d] Port %d out of range.\n", start_time, getpid(), port);
+                fprintf(stderr, "%s [PID %d] Port %d out of range.\n", log_time, getpid(), port);
                 return -2;
         }
 
         fprintf(stderr, "%s [PID %d] Starting on interface %s with hostaddress %s on port %d, timeout is %lfs, data path is %s\n", \
-                start_time, getpid(), interface, hostaddr, port, timeout, data_path);
+                log_time, getpid(), interface, hostaddr, port, timeout, data_path);
 
         //Variabels for PCAP sniffing
 
@@ -175,14 +179,14 @@ int main(int argc, char *argv[])
 
             hdrsem = CHECK(sem_open ("hdrsem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);  //open semaphore for named pipe containing TCP/IP data
 
-            fprintf(stderr, "%s [PID %d] ", start_time, getpid());
+            fprintf(stderr, "%s [PID %d] ", log_time, getpid());
             drop_root_privs(user, "Sniffer"); //drop priviliges
 
             //Make FIFO for header discribing JSON Output
             unlink(HEADER_FIFO);
             CHECK(mkfifo(HEADER_FIFO, 0660), == 0);
             FILE* hdrfifo = fopen(HEADER_FIFO, "r+");
-            fprintf(stderr, "%s [PID %d] FIFO for header JSON: %s\n", start_time, getpid(), HEADER_FIFO);
+            fprintf(stderr, "%s [PID %d] FIFO for header JSON: %s\n", log_time, getpid(), HEADER_FIFO);
 
             int data_bytes = 0; //eventually exisiting data bytes in SYN (yes, this would be akward)
             while (1)
@@ -191,15 +195,15 @@ int main(int argc, char *argv[])
                 packet = pcap_next(handle, &header); //Wait for and grab TCP-SYN (see PCAP_FILTER) (Maybe of maybe not BLOCKING!)
                 if (packet == 0) {continue;}
                 //Preserve actuall start time of Connection attempt.
-                time_str(start_time_unix, sizeof(start_time_unix), start_time, sizeof(start_time));
+                time_str(log_time_unix, sizeof(log_time_unix), log_time, sizeof(log_time));
                 //Begin new global JSON output and open JSON object
-                json_do(true, "{\"timestamp\": \"%s\"", start_time);
+                json_do(true, "{\"timestamp\": \"%s\"", log_time);
                 //Analyze Headers and discard malformed packets
                 if(analyze_ip_header(packet, header) < 0) {continue;}
                 data_bytes = analyze_tcp_header(packet, header);
                 if(data_bytes < 0) {continue;}
                 //JSON Ouput and close JSON object
-                json_do(false, "}, \"data_bytes\": %d, \"unixtime\": %s}", data_bytes, start_time_unix);
+                json_do(false, "}, \"data_bytes\": %d, \"unixtime\": %s}", data_bytes, log_time_unix);
                 sem_wait(hdrsem); //Acquire lock for output
                 fprintf(hdrfifo,"%s\n", json_do(false, "")); //print json output for further analysis
                 sem_post(hdrsem); //release lock
@@ -246,14 +250,14 @@ int main(int argc, char *argv[])
             CHECK(bind(listenfd, (struct sockaddr*)&addr, sizeof(addr)), != -1);
             CHECK(listen(listenfd, 5), != -1);
 
-            fprintf(stderr, "%s [PID %d] ", start_time, getpid());
+            fprintf(stderr, "%s [PID %d] ", log_time, getpid());
             drop_root_privs(user, "Listner");
 
             //Make FIFO for connection discribing JSON Output
             unlink(CONNECT_FIFO);
             CHECK(mkfifo(CONNECT_FIFO, 0660), == 0);
             FILE* confifo = fopen(CONNECT_FIFO, "r+");
-            fprintf(stderr, "%s [PID %d] FIFO for connection json: %s\n", start_time, getpid(), CONNECT_FIFO);
+            fprintf(stderr, "%s [PID %d] FIFO for connection json: %s\n", log_time, getpid(), CONNECT_FIFO);
         
             //Main listening loop
             while (1) {
@@ -269,7 +273,7 @@ int main(int argc, char *argv[])
                             prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
                             CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //register handler for SIGTERM for child process
                             //Preserve actual start time of connection attempt.
-                            time_str(start_time_unix, sizeof(start_time_unix), start_time, sizeof(start_time));
+                            time_str(log_time_unix, sizeof(log_time_unix), log_time, sizeof(log_time));
                             CHECK(getsockopt(openfd, SOL_IP, SO_ORIGINAL_DST, (struct sockaddr*)&trgaddr, &trgaddr_len), != -1); //Read original dst. port from NAT-table
                             struct sockaddr_in *s = (struct sockaddr_in *)&claddr; //create temporary struct to call inet_ntop() properly
                             //retrieve client target IPv4 (important when listening on ANY_ADDR)
@@ -279,7 +283,7 @@ int main(int argc, char *argv[])
 	                            fprintf(stderr, "*** DEBUG [PID %d] Accept-Child entering Worker\n", getpid());
 	                        #endif
                             long int data_bytes = worker_tcp(inet_ntoa(trgaddr.sin_addr), ntohs(trgaddr.sin_port), clientaddr, ntohs(s->sin_port),\
-                                                           timeout, data_path, max_file_size, openfd, start_time, start_time_unix, confifo);
+                                                           timeout, data_path, max_file_size, openfd, log_time, log_time_unix, confifo);
 	                        #if DEBUG >= 2
 	                            fprintf(stderr, "*** DEBUG [PID %d] Accept-Child left Worker\n", getpid());
 	                        #endif
@@ -298,8 +302,8 @@ int main(int argc, char *argv[])
             sleep(2);
             //Log start of Watchdog
             gettimeofday(&begin , NULL);
-            time_str(NULL, 0, start_time, sizeof(start_time)); //Get Human readable string only
-            fprintf(stderr, "%s [PID %d] ", start_time, getpid());
+            time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only
+            fprintf(stderr, "%s [PID %d] ", log_time, getpid());
             drop_root_privs(user, "Parent Watchdog");
 
             // Parent Watchdog Loop.
@@ -310,15 +314,15 @@ int main(int argc, char *argv[])
                 //fprintf(stderr, "waitpid accept: P:%d S:%d\n", waitpid(accept_pid, &stat_accept, WNOHANG), stat_pcap);
                 if ( waitpid(pcap_pid, &stat_pcap, WNOHANG) ) {
                     gettimeofday(&begin , NULL);
-                    time_str(NULL, 0, start_time, sizeof(start_time)); //Get Human readable string only, reuse start_time var.
-                    fprintf(stderr, "%s [PID %d] Sniffer (PID %d) crashed. ARE YOU ROOT?", start_time, getpid(), accept_pid);
+                    time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only, reuse log_time var.
+                    fprintf(stderr, "%s [PID %d] Sniffer (PID %d) crashed. ARE YOU ROOT?", log_time, getpid(), accept_pid);
                     sig_handler_parent(SIGTERM);
                     break;
                 }
                 if ( waitpid(accept_pid, &stat_accept, WNOHANG) ) {
                     gettimeofday(&begin , NULL);
-                    time_str(NULL, 0, start_time, sizeof(start_time)); //Get Human readable string only, reuser start_time var. 
-                    fprintf(stderr, "%s [PID %d] Listner (PID %d) crashed. ARE YOU ROOT?", start_time, getpid(), accept_pid);
+                    time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only, reuser log_time var. 
+                    fprintf(stderr, "%s [PID %d] Listner (PID %d) crashed. ARE YOU ROOT?", log_time, getpid(), accept_pid);
                     sig_handler_parent(SIGTERM);
                     break;
                 }

@@ -36,6 +36,8 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #ifndef MADCAT_COMMON_H
 #define MADCAT_COMMON_H
 
+#define DEBUG 0
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,8 +70,6 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include <sys/wait.h>
 #include <sys/prctl.h>
 
-#define DEBUG 2
-
 // Macro to check if an error occured, translate it, report it to STDERR, calling shutdown callback function to exit with error and dump core.
 #define CHECK(result, check)                                                            \
         ({                                                                 \
@@ -86,6 +86,10 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 #define MASCOTT "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__\n"
 
+ //pseudo constant empty string e.g. for initialization of json_data_node_t and checks. Not used #define here, because this would lead to several instances of an empty constant string with different addresses.
+char EMPTY_STR[1];
+
+//struct holding user UID and PID to drop priviliges to.
 struct user_t{
     char name[33]; //Linux user names may be up to 32 characters long + 0-Termination.
     uid_t   uid;        /* user ID */

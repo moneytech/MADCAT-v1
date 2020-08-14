@@ -100,11 +100,11 @@ madcat.common.h
 tcp_ip_port_mon.h
 ../include/tcp_ip_port_mon.h
 
-/home/MADCAT/v1_Maintenance/bin/tcp_ip_port_mon.c
+/home/MADCAT/MADCAT-v1/v1_Maintenance/bin/tcp_ip_port_mon.c
 madcat.common.h
-/home/MADCAT/v1_Maintenance/bin/madcat.common.h
+/home/MADCAT/MADCAT-v1/v1_Maintenance/bin/madcat.common.h
 madcat.helper.h
-/home/MADCAT/v1_Maintenance/bin/madcat.helper.h
+/home/MADCAT/MADCAT-v1/v1_Maintenance/bin/madcat.helper.h
 tcp_ip_port_mon.h
-/home/MADCAT/v1_Maintenance/bin/tcp_ip_port_mon.h
+/home/MADCAT/MADCAT-v1/v1_Maintenance/bin/tcp_ip_port_mon.h
 

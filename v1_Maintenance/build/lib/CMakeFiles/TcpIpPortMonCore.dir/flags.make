@@ -6,5 +6,5 @@ C_FLAGS = -g
 
 C_DEFINES = 
 
-C_INCLUDES = -I/home/MADCAT/v1_Maintenance/include -I/usr/include/lua5.1 
+C_INCLUDES = -I/home/MADCAT/MADCAT-v1/v1_Maintenance/include -I/usr/include/lua5.1 
 
