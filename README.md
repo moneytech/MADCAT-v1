@@ -1,6 +1,9 @@
 Contact:
 heiko.folkerts [at] bsi.bund.de or github [at] thevoid.email
 
+MADCAT v2 Development is found here:
+https://github.com/FolkertsHeiko/MADCAT-v2
+
                              ▄▄▄               ▄▄▄▄▄▄
                  ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀
                     ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀
