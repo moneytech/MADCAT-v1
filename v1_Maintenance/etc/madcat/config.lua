@@ -43,5 +43,5 @@ user = "hf" --user to drop privileges to.
 path_to_save_tcp_streams = "./tpm/"
 path_to_save_udp_data = "./upm/"
 path_to_save_icmp_data = "./ipm/"
-max_file_size = "10000" --optional: Max. Size for TCP-Streams to be saved or jsonized.
-bufsize = "16384" --optional: Receiving Buffer size for UDP or ICMP Module
+--max_file_size = "10000" --optional: Max. Size for TCP-Streams to be saved or jsonized.
+--bufsize = "16384" --optional: Receiving Buffer size for UDP or ICMP Module

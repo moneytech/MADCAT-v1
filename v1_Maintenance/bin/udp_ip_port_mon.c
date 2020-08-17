@@ -102,12 +102,12 @@ int main(int argc, char *argv[])
                 print_help_udp(argv[0]);
                 return -1;
             }
-
+            
             if(get_config_opt(luaState, "bufsize") != EMPTY_STR) //if optional parameter is given, set it.
             {
                 bufsize = atoi(get_config_opt(luaState, "bufsize")); //convert string type to integer type (bufsize)
             }
-            fprintf(stderr, "\tbufsize: %s\n", get_config_opt(luaState, "bufsize"));
+            fprintf(stderr, "\tbufsize: %d\n", bufsize);
 
             lua_close(luaState);
         }
