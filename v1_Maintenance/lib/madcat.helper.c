@@ -209,7 +209,7 @@ char *inttoa(uint32_t i_addr) //inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. 
     return strndup(str_addr,16); //strndup ensures \0 termination. Do not forget to free()!
 }
 
-char* json_do(bool init_or_reset, const char* format, ...)
+char* json_do(bool reset, const char* format, ...)
 {
 
     static json_struct json; //static to hold data in json_struct after return from function
@@ -218,13 +218,10 @@ char* json_do(bool init_or_reset, const char* format, ...)
     va_list valst; //variable argument list
     va_start (valst, format);
     
-    if (init_or_reset) //should the json_struct be initialized or reseted?
+    if (reset) //should the json_struct be reseted?
     {
-        if (!first_run)
-        {
-            free(json.str);
-            first_run = false;
-        }
+        if (!first_run && json.str != 0) free(json.str);
+        first_run = false;
         CHECK(json.str = malloc(1), != 0);
         *json.str = 0;  //add trailing \0 (empty string)                
     }

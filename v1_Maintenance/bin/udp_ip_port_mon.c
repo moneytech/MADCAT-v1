@@ -182,7 +182,6 @@ int main(int argc, char *argv[])
                     fprintf(stdout,"%s\n", json_do(0,"")); //print json output for logging and further analysis
                     fflush(stdout);
                 }
-                free(json_do(0,""));
         }
 
         return 0;

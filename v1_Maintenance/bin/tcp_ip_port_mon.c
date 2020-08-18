@@ -210,7 +210,6 @@ int main(int argc, char *argv[])
                 fprintf(stdout,"{\"HEADER\": %s}\n", json_do(false, "")); //print json output for logging
                 fflush(hdrfifo);
                 fflush(stdout);
-                free(json_do(0,""));
             }
         }
 
@@ -292,7 +291,6 @@ int main(int argc, char *argv[])
 	                        #if DEBUG >= 2
 	                            fprintf(stderr, "*** DEBUG [PID %d] Accept-Child openfd closed, returning.\n", getpid());
 	                        #endif
-                            free(json_do(false, ""));
                             exit(0); //kill child process
                     }
                     close(openfd); //Close connection
