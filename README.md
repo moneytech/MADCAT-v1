@@ -1,8 +1,8 @@
-Contact:
-heiko.folkerts [at] bsi.bund.de or github [at] thevoid.email
+This is an outdated version of MADCAT, it has some bugs, e.g. in TCP connection matching.
+However, a new version is avaible.
+Because the maintainers of the code changed, it also has a new home. Feel free, to get a fresh copy from:
+https://github.com/BSI-Bund/MADCAT_v2
 
-MADCAT v2 Development is found here:
-https://github.com/FolkertsHeiko/MADCAT-v2
 
                              ▄▄▄               ▄▄▄▄▄▄
                  ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀
